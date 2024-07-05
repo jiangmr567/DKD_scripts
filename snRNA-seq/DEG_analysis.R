@@ -14,30 +14,32 @@ plan(multisession, workers=16)
 
 args = commandArgs(T)
 outdir<-args[1]
-setwd(outdir)
+setwd(outdir) #将工作目录设置为outdir变量所指定的路径
 
 kidney <- readRDS("kidney_harmonyfinal.rds")
 # 寻找DM与CTRL之间差异基因
-Idents(kidney) <- "celltype"
+Idents(kidney) <- "celltype" #设置细胞标识符
 lst <- list()
 k=1
 try(for(i in levels(kidney)){
 	cellids <- subset(kidney,celltype==i)
 	print(i)
 	Idents(object = cellids) <- "state"
-	lst[[k]] <- FindMarkers(cellids, ident.1 = "DM", ident.2 = "CTRL",logfc.threshold = 0)
-	lst[[k]] <- lst[[k]] %>% rownames_to_column("gene")
-	lst[[k]]$celltype <- i
+	lst[[k]] <- FindMarkers(cellids, ident.1 = "DM", ident.2 = "CTRL",logfc.threshold = 0) #FindMarkers() 函数用于找到两个身份（ident.1和ident.2，这里是"DM"和"CTRL")之间的差异基因
+	lst[[k]] <- lst[[k]] %>% rownames_to_column("gene") #将差异基因结果的行名更改为列名"gene"
+	lst[[k]]$celltype <- i 
 	k=k+1
 })
 all_df=do.call(rbind,lst)
-all_df = all_df %>% subset(p_val_adj<0.05 & abs(all_df$avg_log2FC)>0.25)
+all_df = all_df %>% subset(p_val_adj<0.05 & abs(all_df$avg_log2FC)>0.25) #筛选出调整后的p值小于0.05且平均log2倍数变化大于0.25的结果
 write.csv(all_df,"kidney_celltype_DM_CTRL_markers.csv")
 
 # 寻找细胞类型之间的差异marker
 data <- FindAllMarkers(kidney)
 data = data %>% subset(p_val_adj<0.05 & data$avg_log2FC>0.25)
 write.csv(data,"kidney_celltype_markers.csv")
+#筛选出调整后的p值（p_val_adj）小于0.05，并且平均log2倍数变化（avg_log2FC）大于0.25的差异标记基因。
+#这些条件通常用来过滤出在不同细胞类型之间显著表达差异的基因。
 
 deg_df <- read.csv("kidney_celltype_DM_CTRL_markers.csv",row.names=1)
 head(deg_df)

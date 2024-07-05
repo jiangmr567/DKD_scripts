@@ -7,7 +7,9 @@ library(Seurat)
 library(tibble)
 library(dplyr)
 library(future)
+#设置未来（future）包中全局变量的最大大小限制为30 * 1024^3字节，30GB
 options(future.globals.maxSize = 30 * 1024^3)
+#设置并行计算的执行计划为多进程（multisession），并指定使用16个工作线程（workers）来执行并行任务。
 plan(multisession, workers=16)
 
 args = commandArgs(T)

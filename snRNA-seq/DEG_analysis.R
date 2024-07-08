@@ -50,27 +50,31 @@ deg_lst <- list()
 for(cellname in unique(deg$celltype)){
 	deg_lst[[cellname]] <- deg[deg$celltype==cellname,]$gene
 }
-mat <- list_to_matrix(deg_lst)
+mat <- list_to_matrix(deg_lst) #将deg_lst列表转换为一个矩阵mat，该矩阵的行表示差异基因，列表示各个细胞类型
 
-# cell-specific degs shared across cell types
+# cell-specific degs shared across cell types 跨细胞类型共享的特异细胞差异基因
 m1 <- make_comb_mat(mat)
-# filter by intersection size and set size
+# filter by intersection size and set size 按交集大小和集合大小进行筛选
 # only include intersections with a size of greater than 20, but include individual cell types
+# 仅包括交集大小大于20的部分，但包括单个细胞类型。
 # identify combinations with only a single ident by summing all the occurrences of 1 in the string
+# 通过将字符串中所有值为1的出现次数求和来识别仅包含单个标识的组合
 df1 <- strsplit(names(comb_size(m1)), split="") %>%
   as.data.frame() 
 df1 <- sapply(df1, as.numeric)
-colsums <- colSums(df1)
+colsums <- colSums(df1) #计算df1中每列（每种组合）的和
 
 # keep intersection set size of at least 15 and retain all groups with at least 1 deg
+# 保持交集集合大小至少为15，并保留所有至少含有1个差异基因的组
 m1 <- m1[comb_size(m1) >= 15 | colsums == 1]
 
 levels <- rev(c("Immune", "PODO", "ICB", "ICA", "Myofib", "Endo", "DCT", 
          "CNT", "PC", "PEC", "TAL", "PT_VCAM1","PT"))
-ht <- draw(UpSet(m1, set_order=levels))
-od <- column_order(ht)
-cs <- comb_size(m1)
+ht <- draw(UpSet(m1, set_order=levels)) # 创建一个UpSet图对象，set_order=levels指定了集合的顺序
+od <- column_order(ht) # 获取UpSet图中列的顺序，即组合的顺序
+cs <- comb_size(m1) # 计算组合矩阵m1中每个组合的大小（即包含的元素数量）
 p3 <- draw(UpSet(m1, set_order=levels,top_annotation = upset_top_annotation(m1, add_numbers = TRUE)))
+# upset_top_annotation(m1, add_numbers = TRUE): 创建顶部注释，显示每个集合中的元素数量
 
 pdf("kidney_DEG_upset.pdf",height=6,width=8)
 p3
